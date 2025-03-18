@@ -35,10 +35,17 @@ void init(void) {
 	GPIOA_AFRH |= 0x10000000; // A15 (USART2_RX)
 	GPIOA_PUPDR |= 0x10; // A2 (pull-up)
 	GPIOA_MODER &= ~0x10; // A2 (USART2_TX)
+#ifdef IO_PB9
+    RCC_APB1ENR |= RCC_APB1ENR_USART2EN;
+    GPIOB_AFRH |= (7 << (4 * 1));  // PB9 sebagai USART2_TX (AF7)
+    GPIOB_PUPDR |= (1 << (2 * 9)); // PB9 pull-up
+    GPIOB_MODER &= ~(3 << (2 * 9)); // Clear mode bits
+    GPIOB_MODER |= (2 << (2 * 9));  // PB9 sebagai alternate function
 #else
-	RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;
-	GPIOB_AFRL |= 0x10000; // B4 (TIM3_CH1)
-	GPIOB_PUPDR |= 0x100; // B4 (pull-up)
-	GPIOB_MODER &= ~0x100; // B4 (TIM3_CH1)
+    RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;
+    GPIOB_AFRL |= 0x10000; // B4 (TIM3_CH1)
+    GPIOB_PUPDR |= 0x100; // B4 (pull-up)
+    GPIOB_MODER &= ~0x100; // B4 (TIM3_CH1)
 #endif
+
 }
