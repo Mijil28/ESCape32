@@ -42,7 +42,7 @@
 #define IOTIM TIM3
 #define IOTIM_IDR (GPIOB_IDR & 0x200) // PB9
 #define IOTIM_DMA 6
- #define iotim_isr tim4_isr
+ #define iotim_isr tim3_isr
 
 #else
 #define IOTIM TIM3
