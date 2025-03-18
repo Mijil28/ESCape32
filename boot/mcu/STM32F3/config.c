@@ -18,34 +18,44 @@
 #include "common.h"
 
 void init(void) {
-	RCC_AHBENR = RCC_AHBENR_CRCEN | RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
-	RCC_APB2ENR = RCC_APB2ENR_TIM1EN;
+    // Aktifkan clock untuk GPIOA, GPIOB, dan CRC
+    RCC_AHBENR |= RCC_AHBENR_CRCEN | RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
+    RCC_APB2ENR |= RCC_APB2ENR_TIM1EN;
 
-	FLASH_ACR = FLASH_ACR_LATENCY_1WS | FLASH_ACR_PRFTEN;
-	RCC_CFGR = RCC_CFGR_PLLMUL_MUL12;
-	RCC_CR |= RCC_CR_PLLON;
-	while (!(RCC_CR & RCC_CR_PLLRDY));
-	RCC_CFGR |= RCC_CFGR_SW_PLL;
+    // Konfigurasi Flash dan PLL
+    FLASH_ACR = FLASH_ACR_LATENCY_1WS | FLASH_ACR_PRFTEN;
+    RCC_CFGR = RCC_CFGR_PLLMUL_MUL12;
+    RCC_CR |= RCC_CR_PLLON;
+    while (!(RCC_CR & RCC_CR_PLLRDY));
+    RCC_CFGR |= RCC_CFGR_SW_PLL;
 
-	GPIOA_MODER = 0xebffffff;
-	GPIOB_MODER = 0xffffffff;
+    // Konfigurasi GPIO
+    GPIOA_MODER &= ~0x00000000;  // Hanya bersihkan jika perlu
+    GPIOB_MODER &= ~0x00000000;
+
 #ifdef IO_PA2
-	RCC_APB1ENR |= RCC_APB1ENR_USART2EN;
-	GPIOA_AFRL |= 0x100; // A2 (USART2_TX)
-	GPIOA_AFRH |= 0x10000000; // A15 (USART2_RX)
-	GPIOA_PUPDR |= 0x10; // A2 (pull-up)
-	GPIOA_MODER &= ~0x10; // A2 (USART2_TX)
-#ifdef IO_PB9
+    // Konfigurasi USART2 di PA2 (TX) dan PA15 (RX)
+    RCC_APB1ENR |= RCC_APB1ENR_USART2EN;
+    GPIOA_AFRL |= (7 << (4 * 2));  // PA2 sebagai USART2_TX (AF7)
+    GPIOA_AFRH |= (7 << (4 * 7));  // PA15 sebagai USART2_RX (AF7)
+    GPIOA_PUPDR |= (1 << (2 * 2)); // PA2 pull-up
+    GPIOA_MODER &= ~(3 << (2 * 2)); // Clear mode bits
+    GPIOA_MODER |= (2 << (2 * 2));  // PA2 sebagai alternate function
+
+#elif defined(IO_PB9)
+    // Konfigurasi USART2 di PB9 (TX)
     RCC_APB1ENR |= RCC_APB1ENR_USART2EN;
     GPIOB_AFRH |= (7 << (4 * 1));  // PB9 sebagai USART2_TX (AF7)
     GPIOB_PUPDR |= (1 << (2 * 9)); // PB9 pull-up
     GPIOB_MODER &= ~(3 << (2 * 9)); // Clear mode bits
     GPIOB_MODER |= (2 << (2 * 9));  // PB9 sebagai alternate function
-#else
-    RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;
-    GPIOB_AFRL |= 0x10000; // B4 (TIM3_CH1)
-    GPIOB_PUPDR |= 0x100; // B4 (pull-up)
-    GPIOB_MODER &= ~0x100; // B4 (TIM3_CH1)
-#endif
 
+#else
+    // Jika tidak menggunakan USART2, gunakan PB4 untuk TIM3_CH1
+    RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;
+    GPIOB_AFRL |= (2 << (4 * 4)); // PB4 sebagai TIM3_CH1 (AF2)
+    GPIOB_PUPDR |= (1 << (2 * 4)); // PB4 pull-up
+    GPIOB_MODER &= ~(3 << (2 * 4)); // Clear mode bits
+    GPIOB_MODER |= (2 << (2 * 4));  // PB4 sebagai alternate function
+#endif
 }
