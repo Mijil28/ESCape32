@@ -64,6 +64,32 @@ void init(void) {
 	while (!(RCC_CR & RCC_CR_PLLRDY));
 	RCC_CFGR |= RCC_CFGR_SW_PLL;
 
+	#ifdef USE_HSE
+	if (!cfg.throt_cal) {
+		TIM6_PSC = CLK_MHZ - 1; // 1us resolution
+		TIM6_ARR = 9999;
+		TIM6_EGR = TIM_EGR_UG;
+		TIM6_SR = ~TIM_SR_UIF;
+		TIM6_CR1 = TIM_CR1_CEN | TIM_CR1_OPM;
+		RCC_CR |= RCC_CR_HSEON;
+		while (!(RCC_CR & RCC_CR_HSERDY)) {
+			if (!(TIM6_CR1 & TIM_CR1_CEN)) { // Timeout 10ms
+				RCC_CR &= ~RCC_CR_HSEON;
+				goto skip;
+			}
+		}
+		RCC_CFGR = RCC_CFGR_SW_HSE;
+		while ((RCC_CFGR & RCC_CFGR_SWS_MASK << RCC_CFGR_SWS_SHIFT) != RCC_CFGR_SWS_HSE << RCC_CFGR_SWS_SHIFT);
+		RCC_CR &= ~RCC_CR_PLLON;
+		while (RCC_CR & RCC_CR_PLLRDY);
+		RCC_PLLCFGR = RCC_PLLCFGR_PLLSRC_HSE | (72 / USE_HSE) << RCC_PLLCFGR_PLLN_SHIFT | RCC_PLLCFGR_PLLREN | 1 << RCC_PLLCFGR_PLLR_SHIFT;
+		RCC_CR |= RCC_CR_PLLON;
+		while (!(RCC_CR & RCC_CR_PLLRDY));
+		RCC_CFGR = RCC_CFGR_SW_PLLRCLK;
+	}
+skip:
+#endif
+	
 	// Default GPIO state - analog input
 	GPIOA_AFRL = 0x20000000; // A7 (TIM1_CH1N)
 	GPIOA_AFRH = 0x00000222; // A8 (TIM1_CH1), A9 (TIM1_CH2), A10 (TIM1_CH3)
