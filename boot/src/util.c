@@ -36,35 +36,61 @@ int write(char *dst, const char *src, int len) {
 	FLASH_SR = -1; // Clear errors
 	FLASH_CR = FLASH_CR_PER;
 	uint32_t ofs = ((uint32_t)dst + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); // Align upward to page boundary
-	for (int pos = 0; pos < len; pos += PAGE_SIZE) { // Erase pages
+
+	// ------------------- Erase Pages -------------------
 #ifdef STM32F0
+	for (int pos = 0; pos < len; pos += PAGE_SIZE) {
 		FLASH_AR = ofs + pos;
 		FLASH_CR = FLASH_CR_PER | FLASH_CR_STRT;
-#else
-		FLASH_CR = FLASH_CR_PER | FLASH_CR_STRT | ((ofs + pos - (uint32_t)_rom) / PAGE_SIZE) << FLASH_CR_PNB_SHIFT;
-#endif
 		while (FLASH_SR & FLASH_SR_BSY);
 	}
-	FLASH_CR = FLASH_CR_PG;
-#ifdef STM32F0
-	for (int pos = 0; pos < len; pos += 2) { // Write half-words
-		*(uint16_t *)(dst + pos) = *(uint16_t *)(src + pos);
+#elif defined(STM32F3)
+	for (int pos = 0; pos < len; pos += PAGE_SIZE) {
+		FLASH_AR = ofs + pos;
+		FLASH_CR = FLASH_CR_PER | FLASH_CR_STRT;
+		while (FLASH_SR & FLASH_SR_BSY);
+	}
 #else
-	for (int pos = 0; pos < len; pos += 8) { // Write double words
+	for (int pos = 0; pos < len; pos += PAGE_SIZE) {
+		FLASH_CR = FLASH_CR_PER | FLASH_CR_STRT | ((ofs + pos - (uint32_t)_rom) / PAGE_SIZE) << FLASH_CR_PNB_SHIFT;
+		while (FLASH_SR & FLASH_SR_BSY);
+	}
+#endif
+
+	FLASH_CR = FLASH_CR_PG;
+
+	// ------------------- Write Data -------------------
+#ifdef STM32F0
+	for (int pos = 0; pos < len; pos += 2) {
+		*(uint16_t *)(dst + pos) = *(uint16_t *)(src + pos);
+#elif defined(STM32F3)
+	for (int pos = 0; pos < len; pos += 8) {
+		*(uint32_t *)(dst + pos) = *(uint32_t *)(src + pos);
+		*(uint32_t *)(dst + pos + 4) = *(uint32_t *)(src + pos + 4);
+		while (FLASH_SR & FLASH_SR_BSY);
+		if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPERR)) return 0;
+#else
+	for (int pos = 0; pos < len; pos += 8) {
 		*(uint32_t *)(dst + pos) = *(uint32_t *)(src + pos);
 		*(uint32_t *)(dst + pos + 4) = *(uint32_t *)(src + pos + 4);
 #endif
 		while (FLASH_SR & FLASH_SR_BSY);
 	}
+
 	FLASH_CR = FLASH_CR_LOCK;
+
+	// ------------------- Error Checking -------------------
 #ifdef STM32F0
 	if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPRTERR)) return 0;
 #else
 	if (FLASH_SR & (FLASH_SR_PROGERR | FLASH_SR_WRPERR)) return 0;
 #endif
-	for (int pos = 0; pos < len; pos += 4) { // Check written data
+
+	// ------------------- Verify Written Data -------------------
+	for (int pos = 0; pos < len; pos += 4) {
 		if (*(uint32_t *)(dst + pos) != *(uint32_t *)(src + pos)) return 0;
 	}
+
 	return 1;
 }
 
@@ -72,28 +98,41 @@ __attribute__((__section__(".ramtext")))
 void update(char *dst, const char *src, int len) {
 	if (!write(dst, src, len)) return;
 	SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
-	for (;;); // Never return
+	for (;;);
 }
 
-void setwrp(int type) { // 0 - off, 1 - bootloader, 2 - full
+void setwrp(int type) {
 	FLASH_KEYR = FLASH_KEYR_KEY1;
 	FLASH_KEYR = FLASH_KEYR_KEY2;
 	FLASH_OPTKEYR = FLASH_OPTKEYR_KEY1;
 	FLASH_OPTKEYR = FLASH_OPTKEYR_KEY2;
 	FLASH_SR = -1; // Clear errors
+
 #ifdef STM32F0
 	char opts[6] = {FLASH_OPTION_BYTE_0, FLASH_OPTION_BYTE_1, FLASH_OPTION_BYTE_2, FLASH_OPTION_BYTE_3, 0xff, 0xff};
 	if (type == 1) opts[4] = ~((1 << ((_rom_end - _rom + 4095) >> 12)) - 1);
 	else if (type == 2) opts[4] = opts[5] = 0;
+
 	FLASH_CR = FLASH_CR_OPTWRE | FLASH_CR_OPTER;
 	FLASH_CR = FLASH_CR_OPTWRE | FLASH_CR_OPTER | FLASH_CR_STRT;
 	while (FLASH_SR & FLASH_SR_BSY);
+
 	FLASH_CR = FLASH_CR_OPTWRE | FLASH_CR_OPTPG;
 	for (int i = 0; i < 6; ++i) {
 		FLASH_OPTION_BYTE(i) = opts[i];
 		while (FLASH_SR & FLASH_SR_BSY);
 	}
+
 	if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPRTERR)) return;
+
+#elif defined(STM32F3)
+	FLASH_WRP1AR =
+		type == 1 ? (((_rom_end - _rom + 2047) >> 11) - 1) << 16:
+		type == 2 ? 0xff0000 : 0xff;
+	FLASH_CR = FLASH_CR_OPTSTRT;
+	while (FLASH_SR & FLASH_SR_BSY);
+	if (FLASH_SR & (FLASH_SR_PROGERR | FLASH_SR_WRPERR)) return;
+
 #else
 	FLASH_WRP1AR =
 		type == 1 ? (((_rom_end - _rom + 2047) >> 11) - 1) << 16:
@@ -102,10 +141,11 @@ void setwrp(int type) { // 0 - off, 1 - bootloader, 2 - full
 	while (FLASH_SR & FLASH_SR_BSY);
 	if (FLASH_SR & (FLASH_SR_PROGERR | FLASH_SR_WRPERR)) return;
 #endif
+
 #ifdef AT32F4
 	SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
 #else
 	FLASH_CR = FLASH_CR_OBL_LAUNCH;
 #endif
-	for (;;); // Never return
+	for (;;);
 }
