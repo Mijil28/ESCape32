@@ -64,57 +64,7 @@ void init(void) {
 	while (!(RCC_CR & RCC_CR_PLLRDY));
 	RCC_CFGR |= RCC_CFGR_SW_PLL;
 
-	if (!cfg.throt_cal) { 
-    // Setup timer untuk timeout 10ms (1us resolution @ HSI16)
-    TIM6_PSC = 15; 
-    TIM6_ARR = 9999;
-    TIM6_EGR = TIM_EGR_UG;
-    TIM6_SR = ~TIM_SR_UIF;
-    TIM6_CR1 = TIM_CR1_CEN | TIM_CR1_OPM;
-
-    // Aktifkan HSE
-    RCC_CR |= RCC_CR_HSEON;
-    while (!(RCC_CR & RCC_CR_HSERDY)) {
-        if (!(TIM6_CR1 & TIM_CR1_CEN)) { // Timeout 10ms
-            RCC_CR &= ~RCC_CR_HSEON;
-            goto skip;
-        }
-    }
-
-    // Konfigurasi PLL untuk HSE (HSE = 8 MHz, PLL x9 → 72 MHz)
-    RCC_CFGR &= ~RCC_CFGR_PLLSRC;  // Reset sumber PLL
-    RCC_CFGR |= RCC_CFGR_PLLSRC_HSE;  // Pilih HSE
-    RCC_CFGR &= ~RCC_CFGR_PLLMUL;  // Reset multiplier
-    RCC_CFGR |= RCC_CFGR_PLLMUL9;  // PLL x9 (8 MHz × 9 = 72 MHz)
-} 
-
-// Konfigurasi PLL untuk HSI (HSI = 16 MHz, PLL x4.5 → 72 MHz)
-skip:
-RCC_CFGR &= ~RCC_CFGR_PLLSRC;  // Reset sumber PLL
-RCC_CFGR |= RCC_CFGR_PLLSRC_HSI;  // Pilih HSI
-RCC_CFGR &= ~RCC_CFGR_PLLMUL;  // Reset multiplier
-RCC_CFGR |= RCC_CFGR_PLLMUL9;  // PLL x9 (16 MHz / 2 × 9 = 72 MHz)
-
-RCC_CR |= RCC_CR_PLLON;
-while (!(RCC_CR & RCC_CR_PLLRDY));  // Tunggu sampai PLL siap
-
-// Pilih PLL sebagai sistem clock utama
-RCC_CFGR &= ~RCC_CFGR_SW;
-RCC_CFGR |= RCC_CFGR_SW_PLL;
-
-// Tunggu sampai sistem clock beralih ke PLL
-while ((RCC_CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
-
-// Timer untuk memastikan clock stabil
-TIM6_PSC = 0;
-TIM6_ARR = (72 / 2) - 1;
-TIM6_EGR = TIM_EGR_UG;
-TIM6_SR = ~TIM_SR_UIF;
-TIM6_CR1 = TIM_CR1_CEN | TIM_CR1_OPM;
-
-while (TIM6_CR1 & TIM_CR1_CEN);  // Pastikan stabil sebelum lanjut
-
-
+	
 	// Default GPIO state - analog input
 	GPIOA_AFRL = 0x60000000; // A7 (TIM1_CH1N)
 	GPIOA_AFRH = 0x00000666; // A8 (TIM1_CH1), A9 (TIM1_CH2), A10 (TIM1_CH3)
