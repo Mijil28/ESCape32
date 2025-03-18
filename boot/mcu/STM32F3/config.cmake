@@ -1,2 +1,2 @@
-set(opts -mcpu=cortex-m0 -mthumb)
+set(opts -mcpu=cortex-m4 -mthumb)
 set(libs opencm3_stm32f0)
