@@ -122,14 +122,14 @@ void setwrp(int type) {
 
 	if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPRTERR)) return;
 
-#elif defined(STM32F3)
+/* #elif defined(STM32F3)
     FLASH_WRPR =
         type == 1 ? (((_rom_end - _rom + 2047) >> 11) - 1) << 16:
         type == 2 ? 0xff0000 : 0xff;
     FLASH_CR = FLASH_CR_OPTSTRT;
     while (FLASH_SR & FLASH_SR_BSY);
     if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPRTERR)) return;
-
+*/
 #else
 	FLASH_WRP1AR =
 		type == 1 ? (((_rom_end - _rom + 2047) >> 11) - 1) << 16:
