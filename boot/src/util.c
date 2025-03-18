@@ -63,12 +63,6 @@ int write(char *dst, const char *src, int len) {
 #ifdef STM32F0
 	for (int pos = 0; pos < len; pos += 2) {
 		*(uint16_t *)(dst + pos) = *(uint16_t *)(src + pos);
-#elif defined(STM32F3)
-	for (int pos = 0; pos < len; pos += 8) {
-		*(uint32_t *)(dst + pos) = *(uint32_t *)(src + pos);
-		*(uint32_t *)(dst + pos + 4) = *(uint32_t *)(src + pos + 4);
-		while (FLASH_SR & FLASH_SR_BSY);
-		if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPERR)) return 0;
 #else
 	for (int pos = 0; pos < len; pos += 8) {
 		*(uint32_t *)(dst + pos) = *(uint32_t *)(src + pos);
@@ -82,6 +76,8 @@ int write(char *dst, const char *src, int len) {
 	// ------------------- Error Checking -------------------
 #ifdef STM32F0
 	if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPRTERR)) return 0;
+#ifdef STM32F3
+   	if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPRTERR)) return 0;
 #else
 	if (FLASH_SR & (FLASH_SR_PROGERR | FLASH_SR_WRPERR)) return 0;
 #endif
@@ -125,13 +121,13 @@ void setwrp(int type) {
 
 	if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPRTERR)) return;
 
-#elif defined(STM32F3)
-	FLASH_WRP1AR =
-		type == 1 ? (((_rom_end - _rom + 2047) >> 11) - 1) << 16:
-		type == 2 ? 0xff0000 : 0xff;
-	FLASH_CR = FLASH_CR_OPTSTRT;
-	while (FLASH_SR & FLASH_SR_BSY);
-	if (FLASH_SR & (FLASH_SR_PROGERR | FLASH_SR_WRPERR)) return;
+#ifdef STM32F3
+    FLASH_WRPR =
+        type == 1 ? (((_rom_end - _rom + 2047) >> 11) - 1) << 16:
+        type == 2 ? 0xff0000 : 0xff;
+    FLASH_CR = FLASH_CR_OPTSTRT;
+    while (FLASH_SR & FLASH_SR_BSY);
+    if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPRTERR)) return;
 
 #else
 	FLASH_WRP1AR =
