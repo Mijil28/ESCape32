@@ -17,5 +17,5 @@
 
 #pragma once
 
-#define CLK 48000000
+#define CLK 72000000
 #define PAGE_SIZE 1024
