@@ -37,6 +37,13 @@
 #define IOTIM_IDR (GPIOA_IDR & 0x4) // A2
 #define IOTIM_DMA 5
 #define iotim_isr tim15_isr
+
+#elif defined(IO_PB9)
+#define IOTIM TIM4
+#define IOTIM_IDR (GPIOB_IDR & 0x200) // PB9
+#define IOTIM_DMA 6
+ #define iotim_isr tim4_isr
+
 #else
 #define IOTIM TIM3
 #define IOTIM_IDR (GPIOB_IDR & 0x10) // B4
