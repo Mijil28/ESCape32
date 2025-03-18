@@ -59,7 +59,7 @@ int write(char *dst, const char *src, int len) {
 
 	FLASH_CR = FLASH_CR_PG;
 
-	// ------------------- Write Data -------------------
+// ------------------- Write Data -------------------
 #ifdef STM32F0
 	for (int pos = 0; pos < len; pos += 2) {
 		*(uint16_t *)(dst + pos) = *(uint16_t *)(src + pos);
@@ -68,12 +68,13 @@ int write(char *dst, const char *src, int len) {
 		*(uint32_t *)(dst + pos) = *(uint32_t *)(src + pos);
 		*(uint32_t *)(dst + pos + 4) = *(uint32_t *)(src + pos + 4);
 #endif
+		// Tunggu sampai operasi selesai
 		while (FLASH_SR & FLASH_SR_BSY);
 	}
 
 	FLASH_CR = FLASH_CR_LOCK;
 
-	// ------------------- Error Checking -------------------
+// ------------------- Error Checking -------------------
 #ifdef STM32F0
 	if (FLASH_SR & (FLASH_SR_PGERR | FLASH_SR_WRPRTERR)) return 0;
 #elif defined(STM32F3)
@@ -82,7 +83,7 @@ int write(char *dst, const char *src, int len) {
 	if (FLASH_SR & (FLASH_SR_PROGERR | FLASH_SR_WRPERR)) return 0;
 #endif
 
-	// ------------------- Verify Written Data -------------------
+// ------------------- Verify Written Data -------------------
 	for (int pos = 0; pos < len; pos += 4) {
 		if (*(uint32_t *)(dst + pos) != *(uint32_t *)(src + pos)) return 0;
 	}
