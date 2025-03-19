@@ -17,9 +17,11 @@
 
 #pragma once
 
+// Clock Configuration
 #define CLK 72000000
 #define SW_BLANKING
 
+// Interface Timer Configuration
 #define IFTIM TIM2
 #define IFTIM_XRES 2
 #define IFTIM_ICFL 72
@@ -32,20 +34,22 @@
 #define IFTIM_OCR TIM2_CCR1
 #define iftim_isr tim2_isr
 
+// IO Timer Configuration
 #ifdef IO_PB9
-#define IOTIM TIM17
-#define IOTIM_IDR (GPIOB_IDR & 0x200) // PB9
-#define IOTIM_DMA 6
-#define iotim_isr tim17_isr
-
+    #define IOTIM TIM17
+    #define IOTIM_IDR (GPIOB_IDR & 0x200) // PB9
+    #define IOTIM_DMA 6
+    #define iotim_isr tim17_isr
 #else
-#define IOTIM TIM3
-#define IOTIM_IDR (GPIOB_IDR & 0x10) // B4
-#define IOTIM_DMA 4
-#define iotim_isr tim3_isr
+    #define IOTIM TIM3
+    #define IOTIM_IDR (GPIOB_IDR & 0x10) // B4
+    #define IOTIM_DMA 4
+    #define iotim_isr tim3_isr
 #endif
+
 #define iodma_isr dma1_channel4_7_dma2_channel3_5_isr
 
+// USART DMA Configuration
 #define USART1_RX_DMA 3
 #define USART1_TX_DMA 2
 #define usart1_tx_dma_isr dma1_channel2_3_dma2_channel1_2_isr
@@ -53,4 +57,5 @@
 #define USART2_RX_DMA 5
 #define USART2_TX_DMA 4
 
+// Function Prototypes
 void tim1_com_isr(void);
