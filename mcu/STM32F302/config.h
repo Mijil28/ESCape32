@@ -32,17 +32,11 @@
 #define IFTIM_OCR TIM2_CCR1
 #define iftim_isr tim2_isr
 
-#ifdef IO_PA2
-#define IOTIM TIM15
-#define IOTIM_IDR (GPIOA_IDR & 0x4) // A2
-#define IOTIM_DMA 5
-#define iotim_isr tim15_isr
-
-#elif defined(IO_PB9)
-#define IOTIM TIM3
+#ifdef IO_PB9
+#define IOTIM TIM4
 #define IOTIM_IDR (GPIOB_IDR & 0x200) // PB9
 #define IOTIM_DMA 6
- #define iotim_isr tim3_isr
+#define iotim_isr tim4_isr
 
 #else
 #define IOTIM TIM3
