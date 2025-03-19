@@ -33,10 +33,10 @@
 #define iftim_isr tim2_isr
 
 #ifdef IO_PB9
-#define IOTIM TIM4
+#define IOTIM TIM17
 #define IOTIM_IDR (GPIOB_IDR & 0x200) // PB9
 #define IOTIM_DMA 6
-#define iotim_isr tim4_isr
+#define iotim_isr tim17_isr
 
 #else
 #define IOTIM TIM3
