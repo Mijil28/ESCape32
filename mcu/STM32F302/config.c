@@ -59,7 +59,7 @@ void init(void) {
 	while (RCC_CFGR & RCC_CFGR_SWS_PLL);
 	RCC_CR &= ~RCC_CR_PLLON;
 	while (RCC_CR & RCC_CR_PLLRDY);
-	RCC_CFGR = 0x8240000; // PLLMUL=11001 (x26)
+	RCC_CFGR = (RCC_CFGR_PLLMUL_26); // Use defined constant
 	RCC_CR |= RCC_CR_PLLON;
 	while (!(RCC_CR & RCC_CR_PLLRDY));
 	RCC_CFGR |= RCC_CFGR_SW_PLL;
