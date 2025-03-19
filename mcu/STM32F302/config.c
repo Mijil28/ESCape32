@@ -139,15 +139,13 @@ void init(void) {
 void compctl(int x) {
 	int cr = 0;
 	switch (x & 3) {
-		case COMP_IN1:
-			cr = 0x61; // A1>A0
-			break;
-		case COMP_IN2:
-			cr = 0x41; // A1>A4
-			break;
-		case COMP_IN3:
-			cr = 0x51; // A1>A5
-			break;
+		case COMP_IN1: cr = 0xE1; // A3 > A0
+			break; 
+		case COMP_IN2: cr = 0xC1; // A3 > A1
+			break; 
+		case COMP_IN3: cr = 0xD1; // A3 > A6
+			break; 
+		
 	}
 	if (x & 4) cr |= 0x800; // Change polarity
 	COMP_CSR = cr << COMP_SHIFT;
