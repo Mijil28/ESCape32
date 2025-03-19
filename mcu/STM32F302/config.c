@@ -74,12 +74,7 @@ void init(void) {
 	GPIOB_MODER = 0xffffeffa; // B0 (TIM1_CH2N), B1 (TIM1_CH3N), B6 (USART1_TX)
 	
 #ifndef ANALOG
-#ifdef IO_PA2
-    RCC_APB2ENR |= RCC_APB2ENR_TIM15EN;
-    GPIOA_PUPDR |= 0x10; // A2 (pull-up)
-    GPIOA_MODER &= ~0x10; // A2 (TIM15_CH1)
-    nvic_set_priority(NVIC_TIM15_IRQ, 0x40);
-#elif defined(IO_PB9)  // Tambahan untuk PB9
+#ifdef IO_PB9  // Tambahan untuk PB9
     RCC_APB2ENR |= RCC_APB2ENR_TIM17EN;
     GPIOB_AFRH |= 0x1000000; // B9 (TIM17_CH1)
     GPIOB_PUPDR |= 0x40000;  // B9 (pull-up)
