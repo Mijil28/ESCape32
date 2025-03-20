@@ -137,18 +137,17 @@ void init(void) {
 }
 
 void compctl(int x) {
-	int cr = 0;
-	switch (x & 3) {
-		case COMP_IN1: cr = 0xE1; // A3 > A0
-			break; 
-		case COMP_IN2: cr = 0xC1; // A3 > A1
-			break; 
-		case COMP_IN3: cr = 0xD1; // A3 > A6
-			break; 
-		
-	}
-	if (x & 4) cr |= 0x800; // Change polarity
-	COMP_CSR = cr << COMP_SHIFT;
+    int cr = 0;
+    switch (x & 3) {
+        case COMP_IN1: cr = 0xE5; // A7 > A0
+            break; 
+        case COMP_IN2: cr = 0xC5; // A7 > A1
+            break; 
+        case COMP_IN3: cr = 0xD5; // A7 > A6
+            break; 
+    }
+    if (x & 4) cr |= 0x800; // Change polarity
+    COMP_CSR = cr << COMP_SHIFT;
 }
 
 void io_serial(void) {
