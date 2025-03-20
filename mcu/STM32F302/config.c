@@ -66,11 +66,14 @@ void init(void) {
 
 #ifdef USE_HSE
 	if (!cfg.throt_cal) {
+		// Konfigurasi Timer6 untuk timeout 10ms
 		TIM6_PSC = CLK_MHZ - 1; // 1us resolution
 		TIM6_ARR = 9999;
 		TIM6_EGR = TIM_EGR_UG;
-		TIM6_SR = ~TIM_SR_UIF;
+		TIM6_SR &= ~TIM_SR_UIF;
 		TIM6_CR1 = TIM_CR1_CEN | TIM_CR1_OPM;
+		
+		// Aktifkan HSE
 		RCC_CR |= RCC_CR_HSEON;
 		while (!(RCC_CR & RCC_CR_HSERDY)) {
 			if (!(TIM6_CR1 & TIM_CR1_CEN)) { // Timeout 10ms
@@ -78,23 +81,30 @@ void init(void) {
 				goto skip;
 			}
 		}
-		RCC_CFGR = RCC_CFGR_SW_HSE;
-		//while ((RCC_CFGR & RCC_CFGR_SWS_MASK << RCC_CFGR_SWS_SHIFT) != RCC_CFGR_SWS_HSE << RCC_CFGR_SWS_SHIFT);
+
+		// Pilih HSE sebagai sumber clock utama
+		RCC_CFGR |= RCC_CFGR_SW_HSE;
 		while ((RCC_CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_HSE);
-		
+
+		// Matikan PLL sebelum konfigurasi ulang
 		RCC_CR &= ~RCC_CR_PLLON;
 		while (RCC_CR & RCC_CR_PLLRDY);
-		RCC_PLLCFGR = RCC_PLLCFGR_PLLSRC_HSE | (128 / USE_HSE) << RCC_PLLCFGR_PLLN_SHIFT | RCC_PLLCFGR_PLLREN | 1 << RCC_PLLCFGR_PLLR_SHIFT;
-		//RCC_CFGR = RCC_CFGR_PLLSRC_HSE | (72 / USE_HSE) << RCC_CFGR_PLLN_SHIFT | RCC_CFGR_PLLREN | 1 << RCC_CFGR_PLLR_SHIFT;
-		
+
+		// Konfigurasi PLL (contoh: HSE 8MHz x 9 = 72MHz)
+		RCC_CFGR |= RCC_CFGR_PLLSRC_HSE;  // Pilih HSE sebagai sumber PLL
+		RCC_CFGR |= (9 - 1) << RCC_CFGR_PLLMUL_Pos; // PLLMUL = x9
+
+		// Aktifkan PLL
 		RCC_CR |= RCC_CR_PLLON;
 		while (!(RCC_CR & RCC_CR_PLLRDY));
-		//RCC_CFGR = RCC_CFGR_SW_PLLRCLK;
+
+		// Pilih PLL sebagai clock utama
 		RCC_CFGR |= RCC_CFGR_SW_PLL;
 		while ((RCC_CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
 	}
 skip:
 #endif
+
 
 
 	GPIOA_AFRH = 0x00000222; // PA8 (TIM1_CH1), PA9 (TIM1_CH2), PA10 (TIM1_CH3)
