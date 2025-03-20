@@ -33,16 +33,6 @@ void init(void) {
     GPIOA_MODER &= ~0x00000000;  // Hanya bersihkan jika perlu
     GPIOB_MODER &= ~0x00000000;
 
-#ifdef IO_PA2
-    // Konfigurasi USART2 di PA2 (TX) dan PA15 (RX)
-    RCC_APB1ENR |= RCC_APB1ENR_USART2EN;
-    GPIOA_AFRL |= (7 << (4 * 2));  // PA2 sebagai USART2_TX (AF7)
-    GPIOA_AFRH |= (7 << (4 * 7));  // PA15 sebagai USART2_RX (AF7)
-    GPIOA_PUPDR |= (1 << (2 * 2)); // PA2 pull-up
-    GPIOA_MODER &= ~(3 << (2 * 2)); // Clear mode bits
-    GPIOA_MODER |= (2 << (2 * 2));  // PA2 sebagai alternate function
-
-#elif defined(IO_PB9)
     // Konfigurasi USART2 di PB9 (TX)
     RCC_APB1ENR |= RCC_APB1ENR_USART2EN;
     GPIOB_AFRH |= (7 << (4 * 1));  // PB9 sebagai USART2_TX (AF7)
@@ -50,12 +40,4 @@ void init(void) {
     GPIOB_MODER &= ~(3 << (2 * 9)); // Clear mode bits
     GPIOB_MODER |= (2 << (2 * 9));  // PB9 sebagai alternate function
 
-#else
-    // Jika tidak menggunakan USART2, gunakan PB4 untuk TIM3_CH1
-    RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;
-    GPIOB_AFRL |= (2 << (4 * 4)); // PB4 sebagai TIM3_CH1 (AF2)
-    GPIOB_PUPDR |= (1 << (2 * 4)); // PB4 pull-up
-    GPIOB_MODER &= ~(3 << (2 * 4)); // Clear mode bits
-    GPIOB_MODER |= (2 << (2 * 4));  // PB4 sebagai alternate function
-#endif
 }
