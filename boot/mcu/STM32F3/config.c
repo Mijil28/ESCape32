@@ -17,7 +17,7 @@
 
 #include "common.h"
 
-void init(void) {
+/*void init(void) {
     // Aktifkan clock untuk GPIOA, GPIOB, dan CRC
     RCC_AHBENR |= RCC_AHBENR_CRCEN | RCC_AHBENR_IOPAEN | RCC_AHBENR_IOPBEN;
     RCC_APB2ENR |= RCC_APB2ENR_TIM1EN;
@@ -40,4 +40,41 @@ void init(void) {
     GPIOB_MODER &= ~(3 << (2 * 9)); // Clear mode bits
     GPIOB_MODER |= (2 << (2 * 9));  // PB9 sebagai alternate function
 
+}*/
+
+void init(void) {
+    // Aktifkan clock untuk GPIO dan USART2
+    RCC_AHBENR |= RCC_AHBENR_CRCEN | RCC_AHBENR_IOPAEN | RCC_AHBENR_IOPBEN;
+    RCC_APB1ENR = RCC_APB1ENR_USART2EN;
+    RCC_APB2ENR = RCC_APB2ENR_TIM1EN;
+
+    // Konfigurasi Flash dan PLL untuk STM32F3
+    FLASH_ACR = FLASH_ACR_LATENCY_1WS | FLASH_ACR_PRFTBE;
+    RCC_CFGR = RCC_CFGR_PLLMUL_MUL12 | RCC_CFGR_PLLSRC_HSI_DIV2;
+    RCC_CR |= RCC_CR_PLLON;
+    while (!(RCC_CR & RCC_CR_PLLRDY));
+    RCC_CFGR |= RCC_CFGR_SW_PLL;
+
+    // Konfigurasi PB9 sebagai USART2_TX (AF7)
+    GPIOB_AFRH &= ~(0xF << (4 * 1));  // Hapus AF sebelumnya
+    GPIOB_AFRH |= (7 << (4 * 1));     // PB9 sebagai AF7 (USART2_TX)
+
+    // Konfigurasi PA15 sebagai USART2_RX (AF3)
+    GPIOA_AFRH &= ~(0xF << (4 * 7));  
+    GPIOA_AFRH |= (3 << (4 * 7));     // PA15 sebagai AF3 (USART2_RX)
+
+    // Konfigurasi Pull-up untuk komunikasi serial
+    GPIOB_PUPDR &= ~(3 << (2 * 9));   // Hapus pull-up PB9
+    GPIOB_PUPDR |= (1 << (2 * 9));    // Set PB9 pull-up
+
+    GPIOA_PUPDR &= ~(3 << (2 * 15));  // Hapus pull-up PA15
+    GPIOA_PUPDR |= (1 << (2 * 15));   // Set PA15 pull-up
+
+    // Set mode ke Alternate Function
+    GPIOB_MODER &= ~(3 << (2 * 9));   // Hapus mode PB9
+    GPIOB_MODER |= (2 << (2 * 9));    // PB9 sebagai alternate function
+
+    GPIOA_MODER &= ~(3 << (2 * 15));  // Hapus mode PA15
+    GPIOA_MODER |= (2 << (2 * 15));   // PA15 sebagai alternate function
 }
+
