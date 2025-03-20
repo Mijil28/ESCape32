@@ -35,17 +35,10 @@
 #define iftim_isr tim2_isr
 
 // IO Timer Configuration
-#ifdef IO_PB9
-    #define IOTIM TIM17
-    #define IOTIM_IDR (GPIOB_IDR & 0x200) // PB9
-    #define IOTIM_DMA 6
-    #define iotim_isr tim17_isr
-#else
-    #define IOTIM TIM3
-    #define IOTIM_IDR (GPIOB_IDR & 0x10) // B4
-    #define IOTIM_DMA 4
-    #define iotim_isr tim3_isr
-#endif
+#define IOTIM TIM17
+#define IOTIM_IDR (GPIOB_IDR & 0x200) // PB9
+#define IOTIM_DMA 6
+#define iotim_isr tim17_isr
 
 #define iodma_isr dma1_channel4_7_dma2_channel3_5_isr
 
