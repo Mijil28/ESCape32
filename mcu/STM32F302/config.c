@@ -74,19 +74,12 @@ void init(void) {
 
 	
 #ifndef ANALOG
-#ifdef IO_PB9  // Tambahan untuk PB9
     RCC_APB2ENR |= RCC_APB2ENR_TIM17EN;
     GPIOB_AFRH |= 0x1000000; // B9 (TIM17_CH1)
     GPIOB_PUPDR |= 0x40000;  // B9 (pull-up)
     GPIOB_MODER &= ~0x40000; // B9 (TIM17_CH1)
     nvic_set_priority(NVIC_TIM17_IRQ, 0x40);
-#else
-    RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;
-    GPIOB_AFRL |= 0x10000; // B4 (TIM3_CH1)
-    GPIOB_PUPDR |= 0x100; // B4 (pull-up)
-    GPIOB_MODER &= ~0x100; // B4 (TIM3_CH1)
-    nvic_set_priority(NVIC_TIM3_IRQ, 0x40);
-#endif
+
 #endif
 	nvic_set_priority(NVIC_USART1_IRQ, 0x80);
 	nvic_set_priority(NVIC_USART2_IRQ, 0x40);
