@@ -91,8 +91,8 @@ void init(void) {
 		while (RCC_CR & RCC_CR_PLLRDY);
 
 		// Konfigurasi PLL (contoh: HSE 8MHz x 9 = 72MHz)
-		RCC_CFGR |= RCC_CFGR_PLLSRC_HSE;  // Pilih HSE sebagai sumber PLL
-		RCC_CFGR |= (9 - 1) << RCC_CFGR_PLLMUL_Pos; // PLLMUL = x9
+		RCC_CFGR |= RCC_CFGR_PLLSRC;  // Pilih HSE sebagai sumber PLL
+		RCC_CFGR |= RCC_CFGR_PLLMUL_MUL9; // PLLMUL = x9
 
 		// Aktifkan PLL
 		RCC_CR |= RCC_CR_PLLON;
@@ -104,8 +104,6 @@ void init(void) {
 	}
 skip:
 #endif
-
-
 
 	GPIOA_AFRH = 0x00000222; // PA8 (TIM1_CH1), PA9 (TIM1_CH2), PA10 (TIM1_CH3)
 	GPIOB_AFRH = 0x66600000; // PB13 (TIM1_CH1N), PB14 (TIM1_CH2N), PB15 (TIM1_CH3N)
